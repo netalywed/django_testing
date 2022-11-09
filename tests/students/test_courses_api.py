@@ -51,7 +51,7 @@ def test_list_courses(client, course_factory):
 
 # Создание курса +
 @pytest.mark.django_db
-def test_create_course(client):
+def test_add_course(client):
     count = Course.objects.count()
     response = client.post(path='/courses/', data={'id': 2, 'name': 'French'})
     assert response.status_code == 201
