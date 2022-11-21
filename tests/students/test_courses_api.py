@@ -27,14 +27,14 @@ def student_factory():
     return factory
 
 
-# Создание курса +
-@pytest.mark.django_db
-def test_create_course(client):
-    course = course_factory(_quantity=1)
-    response = client.post(path='/courses/')
-    assert response.status_code == 200
-    data = response.json()
-    assert data[0][id] == course.id
+# Создание курса  1-й вариант +
+# @pytest.mark.django_db
+# def test_create_course(client):
+#     course = course_factory(_quantity=1)
+#     response = client.post(path='/courses/')
+#     assert response.status_code == 200
+#     data = response.json()
+#     assert data[0][id] == course.id
 
 
 # Проверка списка курсов +
@@ -49,7 +49,7 @@ def test_list_courses(client, course_factory):
     data = response.json()
     assert len(data) == len(courses)
 
-# Создание курса +
+# Создание курса 2-й вариант +
 @pytest.mark.django_db
 def test_add_course(client):
     count = Course.objects.count()
@@ -61,12 +61,13 @@ def test_add_course(client):
 @pytest.mark.django_db
 def test_update_course(client, course_factory):
     courses = course_factory(_quantity=10)
+    the_id = courses[0].id
     # response = client.get(path='/courses/') # необязательная проверка
     # assert response.status_code == 200
     # data = response.json()
     # assert data[0]["name"] == courses[0].name
     new_name = "French"
-    response2 = client.patch(path='/courses/1/', data={'name': new_name})
+    response2 = client.patch(path=f'/courses/{the_id}/', data={'name': new_name})
     assert response2.status_code == 200
 
 # удаление курса (возвращает ответ 204) (работает, только если запускать отдельно) +-
@@ -80,19 +81,45 @@ def test_delete_course(client, course_factory):
     the_name = courses[0].name
     the_id = courses[0].id
     response2 = client.delete(path='/courses/1/', data={'id': the_id,'name': the_name})
-    assert response2.status_code == 200
+    assert response2.status_code == 204
 
 # Фильтрация +
 @pytest.mark.django_db
-def test_filter_by_course_id_name(client, course_factory):
+def test_filter_by_course_id(client, course_factory):
     courses = course_factory(_quantity=10)
-    response = client.get(path='/courses/')
-    assert response.status_code == 200
-    data = response.json()
-    # проверка по фильтрации
-    for i, m in enumerate(data):
-        assert m["id"] == courses[i].id
-        assert m["name"] == courses[i].name
+    courses_ids = [i.id for i in courses]
+    for course_id in courses_ids:
+        response = client.get(path=f'/courses/?id={course_id}')
+        data = response.json()
+        print('---------------------------------------------------')
+        print(data)
+        assert response.status_code == 200
+        assert data[0]['id'] == course_id
+
+# Фильтрация +
+@pytest.mark.django_db
+def test_filter_by_course_name(client, course_factory):
+    courses = course_factory(_quantity=10)
+    for course in courses:
+        course_id = course.id
+        course_name = course.name
+        response = client.get(path=f'/courses/?id={course_id}')
+        assert response.status_code == 200
+        data = response.json()
+        print('---------------------------------------------------')
+        print(data)
+        assert data[0]['name'] == course_name
+
+
+    # нерабочий вариант
+    # courses = course_factory(_quantity=10)
+    # response = client.get(path='/courses/')
+    # assert response.status_code == 200
+    # data = response.json()
+    # # проверка по фильтрации
+    # for i, m in enumerate(data):
+    #     assert m["id"] == courses[i].id
+    #     assert m["name"] == courses[i].name
 
     #другой вариант
     # courses = course_factory(_quantity=10)
