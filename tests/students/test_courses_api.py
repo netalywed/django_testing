@@ -27,14 +27,16 @@ def student_factory():
     return factory
 
 
-# Создание курса  1-й вариант +
-# @pytest.mark.django_db
-# def test_create_course(client):
-#     course = course_factory(_quantity=1)
-#     response = client.post(path='/courses/')
-#     assert response.status_code == 200
-#     data = response.json()
-#     assert data[0][id] == course.id
+# Создание курса через фабрику и его проверка
+@pytest.mark.django_db
+def test_create_course(client, course_factory):
+    course = course_factory(_quantity=1)
+    the_id = course[0].id
+    response = client.get(path=f'/courses/{the_id}/')
+    assert response.status_code == 200
+    data = response.json()
+    id_2 = data['id']
+    assert id_2 == the_id
 
 
 # Проверка списка курсов +
